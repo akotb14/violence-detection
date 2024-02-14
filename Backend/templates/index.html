@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>WebSocket Image Upload</title>
+</head>
+<body>
+   <input type="file" id="fileInput" />
+   <button onclick="connectSocket()">Connect</button>
+   <button onclick="uploadImage()">Upload Image</button>
+
+   <div id="resultContainer" style="margin-top: 20px;"></div>
+
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+   <script>
+      var socket;
+
+      function connectSocket() {
+         socket = io.connect('http://127.0.0.1:5000/');
+
+         socket.on('connect', function() {
+            console.log('WebSocket connected');
+         });
+
+         socket.on('disconnect', function() {
+            console.log('WebSocket disconnected');
+         });
+      }
+
+      function uploadImage() {
+         var fileInput = document.getElementById('fileInput');
+         var file = fileInput.files[0];
+
+         var reader = new FileReader();
+         reader.onload = function (e) {
+            var fileContent = e.target.result;
+            var data = { file: { filename: file.name, content: fileContent } };
+            socket.emit('image_upload', data);
+         };
+         reader.readAsArrayBuffer(file);
+      }
+
+      socket.on('result', function (data) {
+         var resultContainer = document.getElementById('resultContainer');
+         resultContainer.innerHTML = 'Result: ' + data.result;
+         alert('Result: ' + data.result);
+      });
+
+      // Establish WebSocket connection when the page loads
+      window.onload = connectSocket;
+   </script>
+</body>
+</html>
